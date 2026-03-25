@@ -2,6 +2,10 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
+
+<!-- ВАЖЛИВО ДЛЯ МОБІЛКИ -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Для тебе 💖</title>
 
 <style>
@@ -13,15 +17,22 @@ body {
     text-align: center;
 }
 
+/* щоб нічого не вилазило */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 .container {
     position: relative;
     z-index: 2;
-    margin-top: 20%;
+    margin-top: 25vh;
+    padding: 0 15px;
 }
 
 h1 {
     color: #fff;
-    font-size: 28px;
+    font-size: 24px;
     text-shadow: 0 0 10px #ff66b2;
 }
 
@@ -30,6 +41,8 @@ input {
     border-radius: 15px;
     border: none;
     font-size: 16px;
+    width: 80%;
+    max-width: 250px;
 }
 
 button {
@@ -51,6 +64,7 @@ button {
     background-color: #fff;
     color: #ff4da6;
     position: fixed;
+    z-index: 3;
 }
 
 @keyframes pulse {
@@ -81,7 +95,7 @@ button {
     <h1>Введи своє ім'я 💕</h1>
     <input type="text" id="nameInput">
     <br>
-    <button class="yes" onclick="checkName()">Увійти</button>
+    <button class="yes" onclick="startApp()">Увійти</button>
 </div>
 
 <div class="container" id="deniedScreen" style="display:none;">
@@ -103,29 +117,40 @@ button {
     <h1 id="finalText"></h1>
 </div>
 
-<!-- звук -->
 <audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
 
 <script>
 const allowedNames = ["єлізавєта", "єлізавєтка", "єлізавета"];
 let userName = "";
+let soundUnlocked = false;
 
-/* ефект друку */
-function typeText(element, text, speed=50) {
-    element.innerHTML = "";
-    let i = 0;
-
-    function typing() {
-        if (i < text.length) {
-            element.innerHTML += text.charAt(i);
-            i++;
-            setTimeout(typing, speed);
-        }
-    }
-    typing();
+/* розблокування звуку */
+function unlockSound() {
+    const audio = document.getElementById("sound");
+    audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        soundUnlocked = true;
+    }).catch(()=>{});
 }
 
-function checkName() {
+document.addEventListener("click", unlockSound, { once: true });
+
+/* друк тексту */
+function typeText(el, text, speed=40) {
+    el.innerHTML = "";
+    let i = 0;
+    function t() {
+        if (i < text.length) {
+            el.innerHTML += text[i++];
+            setTimeout(t, speed);
+        }
+    }
+    t();
+}
+
+/* старт */
+function startApp() {
     const input = document.getElementById("nameInput").value.trim();
     const lower = input.toLowerCase();
 
@@ -135,8 +160,8 @@ function checkName() {
         switchScreen("loginScreen", "screen1");
 
         setTimeout(() => {
-            typeText(document.getElementById("qText"), userName + ", ти за мною скучила? 💕");
-            initNoButton();
+            typeText(qText, userName + ", ти за мною скучила? 💕");
+            initNo();
         }, 200);
 
     } else {
@@ -145,38 +170,34 @@ function checkName() {
 }
 
 /* кнопка НІ */
-function initNoButton() {
+function initNo() {
     const btn = document.getElementById("noBtn");
 
     btn.style.left = "60%";
-    btn.style.top = "55%";
+    btn.style.top = "60%";
 
-    btn.addEventListener("mouseover", () => moveBtn(btn));
+    function move() {
+        const maxX = window.innerWidth - btn.offsetWidth;
+        const maxY = window.innerHeight - btn.offsetHeight;
 
-    document.addEventListener("mousemove", (e) => {
-        const rect = btn.getBoundingClientRect();
-        const dist = Math.hypot(e.clientX - rect.left, e.clientY - rect.top);
+        btn.style.left = Math.random() * maxX + "px";
+        btn.style.top = Math.random() * maxY + "px";
+    }
 
-        if (dist < 100) {
-            moveBtn(btn);
-        }
+    btn.addEventListener("mouseover", move);
+
+    /* ДЛЯ МОБІЛКИ */
+    btn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        move();
     });
 
     btn.addEventListener("click", () => {
         switchScreen("screen1", "screen2");
-
         setTimeout(() => {
-            typeText(document.getElementById("lieText"), userName + ", не бреши мені 😏");
+            typeText(lieText, userName + ", не бреши мені 😏");
         }, 200);
     });
-}
-
-function moveBtn(btn) {
-    const maxX = window.innerWidth - btn.offsetWidth;
-    const maxY = window.innerHeight - btn.offsetHeight;
-
-    btn.style.left = Math.random() * maxX + "px";
-    btn.style.top = Math.random() * maxY + "px";
 }
 
 /* переходи */
@@ -193,59 +214,52 @@ function goFinal() {
     switchScreen("screen2", "screen3");
 
     setTimeout(() => {
-        typeText(document.getElementById("finalText"),
-            "А я скучив на один раз більше, пес 🐶💖", 60);
+        typeText(finalText, "А я скучив на один раз більше, пес 🐶💖");
 
-        document.getElementById("sound").play();
+        if (soundUnlocked) {
+            document.getElementById("sound").play();
+        }
+
         heartExplosion();
     }, 200);
 }
 
 function switchScreen(hideId, showId) {
-    const h = document.getElementById(hideId);
-    const s = document.getElementById(showId);
-
-    if (h) h.style.display = "none";
-    if (s) s.style.display = "block";
+    document.getElementById(hideId).style.display = "none";
+    document.getElementById(showId).style.display = "block";
 }
 
-/* звичайні сердечка */
+/* сердечка */
 function createHeart() {
-    const heart = document.createElement("div");
-    heart.className = "heart";
-    heart.innerText = "💖";
-
-    heart.style.left = Math.random() * 100 + "vw";
-    heart.style.animationDuration = (Math.random()*3+2)+"s";
-
-    document.body.appendChild(heart);
-    setTimeout(()=>heart.remove(),5000);
+    const h = document.createElement("div");
+    h.className = "heart";
+    h.innerText = "💖";
+    h.style.left = Math.random()*100+"vw";
+    h.style.animationDuration = (Math.random()*3+2)+"s";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),5000);
 }
 setInterval(createHeart, 200);
 
-/* ВИБУХ */
+/* вибух */
 function heartExplosion() {
-    for (let i = 0; i < 50; i++) {
-        const heart = document.createElement("div");
-        heart.innerText = "💖";
-        heart.style.position = "fixed";
-        heart.style.left = "50%";
-        heart.style.top = "50%";
+    for (let i = 0; i < 40; i++) {
+        const h = document.createElement("div");
+        h.innerText = "💖";
+        h.style.position = "fixed";
+        h.style.left = "50%";
+        h.style.top = "50%";
+        document.body.appendChild(h);
 
-        const angle = Math.random() * 2 * Math.PI;
-        const distance = Math.random() * 300;
+        const a = Math.random()*2*Math.PI;
+        const d = Math.random()*250;
 
-        heart.style.transition = "1s";
+        setTimeout(()=>{
+            h.style.transform = `translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
+            h.style.opacity = 0;
+        },10);
 
-        document.body.appendChild(heart);
-
-        setTimeout(() => {
-            heart.style.transform =
-                `translate(${Math.cos(angle)*distance}px, ${Math.sin(angle)*distance}px)`;
-            heart.style.opacity = 0;
-        }, 10);
-
-        setTimeout(()=>heart.remove(),1000);
+        setTimeout(()=>h.remove(),1000);
     }
 }
 </script>
