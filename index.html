@@ -2,10 +2,7 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-
-<!-- ВАЖЛИВО ДЛЯ МОБІЛКИ -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Для тебе 💖</title>
 
 <style>
@@ -16,12 +13,7 @@ body {
     overflow: hidden;
     text-align: center;
 }
-
-/* щоб нічого не вилазило */
-html, body {
-    max-width: 100%;
-    overflow-x: hidden;
-}
+html, body { max-width: 100%; overflow-x: hidden; }
 
 .container {
     position: relative;
@@ -30,13 +22,9 @@ html, body {
     padding: 0 15px;
 }
 
-h1 {
-    color: #fff;
-    font-size: 24px;
-    text-shadow: 0 0 10px #ff66b2;
-}
+h1 { color: #fff; font-size: 24px; text-shadow: 0 0 10px #ff66b2; }
 
-input {
+input[type="text"], input[type="number"] {
     padding: 10px;
     border-radius: 15px;
     border: none;
@@ -55,42 +43,20 @@ button {
     animation: pulse 1.5s infinite;
 }
 
-.yes {
-    background-color: #ff4da6;
-    color: white;
-}
+.yes { background-color: #ff4da6; color: white; }
+.no { background-color: #fff; color: #ff4da6; position: fixed; z-index: 3; }
 
-.no {
-    background-color: #fff;
-    color: #ff4da6;
-    position: fixed;
-    z-index: 3;
-}
+@keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
 
-@keyframes pulse {
-    0% {transform: scale(1);}
-    50% {transform: scale(1.1);}
-    100% {transform: scale(1);}
-}
+.heart { position: fixed; top: -10px; font-size: 20px; animation: fall linear infinite; }
+@keyframes fall { to { transform: translateY(100vh); } }
 
-/* сердечка */
-.heart {
-    position: fixed;
-    top: -10px;
-    font-size: 20px;
-    animation: fall linear infinite;
-}
-
-@keyframes fall {
-    to {
-        transform: translateY(100vh);
-    }
-}
+#strengthError { color:#fff; text-shadow:0 0 5px #ff66b2; }
 </style>
 </head>
-
 <body>
 
+<!-- Екран логіну -->
 <div class="container" id="loginScreen">
     <h1>Введи своє ім'я 💕</h1>
     <input type="text" id="nameInput">
@@ -98,167 +64,133 @@ button {
     <button class="yes" onclick="startApp()">Увійти</button>
 </div>
 
+<!-- Екран відмови -->
 <div class="container" id="deniedScreen" style="display:none;">
     <h1>Вибачте, але Ви мене не цікавите 😌</h1>
 </div>
 
+<!-- Екран питання -->
 <div class="container" id="screen1" style="display:none;">
     <h1 id="qText"></h1>
     <button class="yes" onclick="yesClick()">Так</button>
     <button class="no" id="noBtn">Ні</button>
 </div>
 
+<!-- Екран “не бреши мені” -->
 <div class="container" id="screen2" style="display:none;">
     <h1 id="lieText"></h1>
     <button class="yes" onclick="goNext()">Ок</button>
 </div>
 
+<!-- Екран введення числа -->
+<div class="container" id="screen4" style="display:none;">
+    <h1>Введи на скільки сильно 💖</h1>
+    <input type="number" id="strengthInput" min="1" max="12" placeholder="1-12">
+    <br>
+    <button class="yes" onclick="submitStrength()">Підтвердити</button>
+    <p id="strengthError"></p>
+</div>
+
+<!-- Фінальний екран -->
 <div class="container" id="screen3" style="display:none;">
     <h1 id="finalText"></h1>
 </div>
 
-<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
-
 <script>
-const allowedNames = ["єлізавєта", "єлізавєтка", "єлізавета"];
+const allowedNames = ["єлізавєта","єлізавєтка","єлізавета", "пес", "песюха", "єлізаветка", "ліза"];
 let userName = "";
-let soundUnlocked = false;
 
-/* розблокування звуку */
-function unlockSound() {
-    const audio = document.getElementById("sound");
-    audio.play().then(() => {
-        audio.pause();
-        audio.currentTime = 0;
-        soundUnlocked = true;
-    }).catch(()=>{});
-}
-
-document.addEventListener("click", unlockSound, { once: true });
-
-/* друк тексту */
-function typeText(el, text, speed=40) {
-    el.innerHTML = "";
-    let i = 0;
-    function t() {
-        if (i < text.length) {
-            el.innerHTML += text[i++];
-            setTimeout(t, speed);
-        }
-    }
+/* ефект друку */
+function typeText(el,text,speed=40){
+    el.innerHTML="";
+    let i=0;
+    function t(){ if(i<text.length){ el.innerHTML+=text[i++]; setTimeout(t,speed); } }
     t();
 }
 
-/* старт */
-function startApp() {
-    const input = document.getElementById("nameInput").value.trim();
-    const lower = input.toLowerCase();
-
-    if (allowedNames.includes(lower)) {
-        userName = input;
-
-        switchScreen("loginScreen", "screen1");
-
-        setTimeout(() => {
-            typeText(qText, userName + ", ти за мною скучила? 💕");
-            initNo();
-        }, 200);
-
+/* старт логіну */
+function startApp(){
+    const input=document.getElementById("nameInput").value.trim();
+    if(allowedNames.includes(input.toLowerCase())){
+        userName=input;
+        switchScreen("loginScreen","screen1");
+        setTimeout(()=>{ typeText(qText,userName+", ти за мною скучила? 💕"); initNoButton(); },200);
     } else {
-        switchScreen("loginScreen", "deniedScreen");
+        switchScreen("loginScreen","deniedScreen");
     }
 }
 
-/* кнопка НІ */
-function initNo() {
-    const btn = document.getElementById("noBtn");
+/* кнопка “Ні” */
+function initNoButton(){
+    const btn=document.getElementById("noBtn");
+    btn.style.left="60%"; btn.style.top="60%";
 
-    btn.style.left = "60%";
-    btn.style.top = "60%";
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    function move() {
-        const maxX = window.innerWidth - btn.offsetWidth;
-        const maxY = window.innerHeight - btn.offsetHeight;
-
-        btn.style.left = Math.random() * maxX + "px";
-        btn.style.top = Math.random() * maxY + "px";
+    if(isMobile){
+        btn.addEventListener("click",()=>{
+            switchScreen("screen1","screen2");
+            setTimeout(()=>{ typeText(document.getElementById("lieText"),userName+", не бреши мені 😏"); },200);
+        });
+        btn.addEventListener("touchstart",()=>{
+            switchScreen("screen1","screen2");
+            setTimeout(()=>{ typeText(document.getElementById("lieText"),userName+", не бреши мені 😏"); },200);
+        });
+    } else {
+        btn.addEventListener("mouseover",()=>{
+            const maxX=window.innerWidth-btn.offsetWidth;
+            const maxY=window.innerHeight-btn.offsetHeight;
+            btn.style.left=Math.random()*maxX+"px";
+            btn.style.top=Math.random()*maxY+"px";
+        });
+        btn.addEventListener("click",(e)=>{ e.preventDefault(); });
     }
-
-    btn.addEventListener("mouseover", move);
-
-    /* ДЛЯ МОБІЛКИ */
-    btn.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        move();
-    });
-
-    btn.addEventListener("click", () => {
-        switchScreen("screen1", "screen2");
-        setTimeout(() => {
-            typeText(lieText, userName + ", не бреши мені 😏");
-        }, 200);
-    });
 }
 
-/* переходи */
-function yesClick() {
-    goFinal();
+/* переходи на екран введення числа */
+function yesClick(){ goToStrengthScreen(); }
+function goNext(){ goToStrengthScreen(); }
+
+function goToStrengthScreen(){
+    switchScreen("screen1","screen4");
+    switchScreen("screen2","screen4");
 }
 
-function goNext() {
-    goFinal();
+/* валідація числа та перехід на фінальний екран */
+function submitStrength(){
+    const val=parseInt(document.getElementById("strengthInput").value);
+    const errorEl=document.getElementById("strengthError");
+    if(isNaN(val)||val<1||val>12){
+        errorEl.textContent="Введи число від 1 до 12!";
+    } else {
+        errorEl.textContent="";
+        switchScreen("screen4","screen3");
+        setTimeout(()=>{ typeText(document.getElementById("finalText"),"А я скучив на один раз більше, пес 🐶💖"); heartExplosion(); },200);
+    }
 }
 
-function goFinal() {
-    switchScreen("screen1", "screen3");
-    switchScreen("screen2", "screen3");
-
-    setTimeout(() => {
-        typeText(finalText, "А я скучив на один раз більше, пес 🐶💖");
-
-        if (soundUnlocked) {
-            document.getElementById("sound").play();
-        }
-
-        heartExplosion();
-    }, 200);
+/* фінальний екран та ефекти */
+function switchScreen(hideId,showId){
+    document.getElementById(hideId).style.display="none";
+    document.getElementById(showId).style.display="block";
 }
 
-function switchScreen(hideId, showId) {
-    document.getElementById(hideId).style.display = "none";
-    document.getElementById(showId).style.display = "block";
-}
-
-/* сердечка */
-function createHeart() {
-    const h = document.createElement("div");
-    h.className = "heart";
-    h.innerText = "💖";
-    h.style.left = Math.random()*100+"vw";
-    h.style.animationDuration = (Math.random()*3+2)+"s";
+/* падаючі сердечка */
+function createHeart(){
+    const h=document.createElement("div"); h.className="heart"; h.innerText="💖";
+    h.style.left=Math.random()*100+"vw"; h.style.animationDuration=(Math.random()*3+2)+"s";
     document.body.appendChild(h);
     setTimeout(()=>h.remove(),5000);
 }
-setInterval(createHeart, 200);
+setInterval(createHeart,200);
 
-/* вибух */
-function heartExplosion() {
-    for (let i = 0; i < 40; i++) {
-        const h = document.createElement("div");
-        h.innerText = "💖";
-        h.style.position = "fixed";
-        h.style.left = "50%";
-        h.style.top = "50%";
-        document.body.appendChild(h);
-
-        const a = Math.random()*2*Math.PI;
-        const d = Math.random()*250;
-
-        setTimeout(()=>{
-            h.style.transform = `translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
-            h.style.opacity = 0;
-        },10);
-
+/* вибух сердечок на фіналі */
+function heartExplosion(){
+    for(let i=0;i<40;i++){
+        const h=document.createElement("div"); h.innerText="💖"; h.style.position="fixed";
+        h.style.left="50%"; h.style.top="50%"; document.body.appendChild(h);
+        const a=Math.random()*2*Math.PI; const d=Math.random()*250;
+        setTimeout(()=>{ h.style.transform=`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px)`; h.style.opacity=0; },10);
         setTimeout(()=>h.remove(),1000);
     }
 }
