@@ -160,12 +160,23 @@ function goToStrengthScreen(){
 function submitStrength(){
     const val=parseInt(document.getElementById("strengthInput").value);
     const errorEl=document.getElementById("strengthError");
+
     if(isNaN(val)||val<1||val>12){
         errorEl.textContent="Введи число від 1 до 12!";
     } else {
         errorEl.textContent="";
+        finalNumber = val;
         switchScreen("screen4","screen3");
-        setTimeout(()=>{ typeText(document.getElementById("finalText"),"А я скучив на один раз більше, пес 🐶💖"); heartExplosion(); },200);
+
+        setTimeout(()=>{
+            const finalEl=document.getElementById("finalText");
+            if(finalNumber>=1 && finalNumber<=9){
+                typeText(finalEl,"Ехх, а я скучив сильніше, пес 😢");
+            } else {
+                typeText(finalEl,"Хехе, а я скучив на один раз більше, пес 🐶💖");
+            }
+            heartExplosion();
+        },200);
     }
 }
 
